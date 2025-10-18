@@ -8,13 +8,21 @@
         "$path": "Packages"
       },
       "Lib": {
-        "$path": "src"
+        "$path": "src/shared"
       }
     },
-		"TestService":{
-			"$className": "TestService",
-			"$path": "TestService"
-		}
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "test-cloud-testez": {
+        "$path": "TestService/test-cloud-testez"
+      }
+    }
   }
 }
 

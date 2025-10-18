@@ -80,24 +80,79 @@ local HttpService = game:GetService("HttpService")
 -- 我们依赖全局 print/warn 的重写已经在 _G 中设置
 -- 测试模块会自动使用全局的 print/warn
 
--- 测试目标目录
--- Check if we have rbxts_include or use Lib for Lua projects
-local targetDir
-if ReplicatedStorage:FindFirstChild("rbxts_include") then
-	-- TypeScript/roblox-ts project
-	-- 优先使用 @white-dragon-bevy 包（如果存在）
-	local nodeModules = ReplicatedStorage.rbxts_include:FindFirstChild("node_modules")
-	if nodeModules and nodeModules:FindFirstChild("@white-dragon-bevy") then
-		targetDir = nodeModules["@white-dragon-bevy"]
-	else
-		-- 如果没有找到特定包，使用 rbxts_include（但会扫描所有文件，可能较慢）
-		targetDir = ReplicatedStorage.rbxts_include
+-- 从脚本注入获取 roots 路径（多个路径用 ';' 分隔）
+local rootsPath = "{{ROOTS}}"
+if rootsPath == "" then
+	rootsPath = "ServerScriptService;ReplicatedStorage"  -- 默认值
+end
+
+-- 辅助函数：分割字符串
+local function split(str, sep)
+	local parts = {}
+	for part in string.gmatch(str, "([^" .. sep .. "]+)") do
+		table.insert(parts, part)
 	end
-elseif ReplicatedStorage:FindFirstChild("Lib") then
-	-- Lua project
-	targetDir = ReplicatedStorage.Lib
-else
-	error("No test target directory found. Expected rbxts_include or Lib in ReplicatedStorage")
+	return parts
+end
+
+-- 辅助函数：根据路径导航到目标对象
+local function navigatePath(pathString)
+	local parts = split(pathString, '/')
+	local current = game
+
+	for _, part in ipairs(parts) do
+		-- 尝试作为 Service
+		local success, service = pcall(function()
+			return game:GetService(part)
+		end)
+
+		if success and service then
+			current = service
+		else
+			-- 否则作为子对象查找
+			current = current:FindFirstChild(part)
+			if not current then
+				return nil, "Path not found: " .. pathString .. " (failed at: " .. part .. ")"
+			end
+		end
+	end
+
+	return current
+end
+
+-- 测试目标目录
+-- 使用 roots 参数导航到目标目录（支持多个路径，用 ';' 分隔）
+local rootPaths = split(rootsPath, ';')
+local targetDirs = {}
+
+for _, pathStr in ipairs(rootPaths) do
+	local targetDir, navError = navigatePath(pathStr)
+	if not targetDir then
+		error("Failed to navigate to test directory '" .. pathStr .. "': " .. tostring(navError))
+	end
+
+	-- 如果目标目录是 ReplicatedStorage，则尝试自动检测项目类型
+	-- 这样保持向后兼容性
+	if targetDir == game:GetService("ReplicatedStorage") then
+		-- Check if we have rbxts_include or use Lib for Lua projects
+		if targetDir:FindFirstChild("rbxts_include") then
+			-- TypeScript/roblox-ts project
+			-- 优先使用 @white-dragon-bevy 包（如果存在）
+			local nodeModules = targetDir.rbxts_include:FindFirstChild("node_modules")
+			if nodeModules and nodeModules:FindFirstChild("@white-dragon-bevy") then
+				targetDir = nodeModules["@white-dragon-bevy"]
+			else
+				-- 如果没有找到特定包，使用 rbxts_include（但会扫描所有文件，可能较慢）
+				targetDir = targetDir.rbxts_include
+			end
+		elseif targetDir:FindFirstChild("Lib") then
+			-- Lua project
+			targetDir = targetDir.Lib
+		end
+		-- 如果都没有找到，就使用 ReplicatedStorage 本身作为测试目录
+	end
+
+	table.insert(targetDirs, targetDir)
 end
 
 -- 引入 testez - 尝试从两个可能的位置加载
@@ -197,7 +252,15 @@ end
 -- 根据 pattern 决定要测试的目标
 local testTargets
 local testOptions
-local allTestFiles = scanTestFiles(targetDir)
+
+-- 扫描所有目标目录中的测试文件
+local allTestFiles = {}
+for _, targetDir in ipairs(targetDirs) do
+	local filesInDir = scanTestFiles(targetDir)
+	for _, file in ipairs(filesInDir) do
+		table.insert(allTestFiles, file)
+	end
+end
 
 if testNamePattern then
 	-- 扫描并过滤测试文件
@@ -237,8 +300,8 @@ if testNamePattern then
 
 	testOptions = {}
 else
-	-- 无 pattern 时直接运行整个目录
-	testTargets = {targetDir}
+	-- 无 pattern 时直接运行所有目录
+	testTargets = targetDirs
 	testOptions = {}
 end
 

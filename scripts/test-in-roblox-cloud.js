@@ -36,7 +36,7 @@ function parseArgs() {
     version: false,
     rbxl: 'test-place.rbxl',  // Default output file
     jest: false,
-    roots: ['ReplicatedStorage'],
+    roots: ['ServerScriptService', 'ReplicatedStorage'],
     glob: null,
     skipBuild: false,
     timeout: 120000,  // Default 2 minutes (120 seconds)
@@ -60,7 +60,8 @@ function parseArgs() {
     } else if (arg === '-j' || arg === '--jest') {
       config.jest = true;
     } else if (arg === '--roots') {
-      config.roots = args[++i].split('/');
+      // 使用 ',' 分隔多个根路径，'/' 用于路径层级
+      config.roots = args[++i].split(',').map(p => p.trim());
     } else if (arg === '--glob') {
       config.glob = args[++i];
     } else if (!arg.startsWith('-')) {
@@ -94,7 +95,8 @@ Options:
   -t, --timeout <sec> Task execution timeout in seconds (default: 120)
   -r, --rbxl <path>   Specify rbxl file path to upload (default: test-place.rbxl)
   -j, --jest          Use jest instead of testez (default: testez)
-      --roots <path>  Test root paths, separated by / (default: ReplicatedStorage)
+      --roots <path>  Test root paths, separated by , (default: ServerScriptService,ReplicatedStorage)
+                      Use / for path hierarchy (e.g., ServerScriptService/Server)
       --glob <match>  Match test files in roots
       --skip-build    Skip the Rojo build step
 
@@ -287,6 +289,9 @@ async function runTests(config, versionId) {
 
   // Replace pattern placeholder
   testScript = testScript.replace('{{TEST_NAME_PATTERN}}', config.pattern || '');
+  // Replace roots placeholder (join array with ';' to support multiple root paths)
+  // ';' separates multiple paths, '/' separates path hierarchy
+  testScript = testScript.replace('{{ROOTS}}', config.roots.join(';'));
 
   if (config.pattern) {
     log.info(`Test filter: ${config.pattern}`);

@@ -32,6 +32,7 @@ node scripts/test-in-roblox-cloud.js -V
 - ✅ **Rich Output**: Detailed test results with stack traces
 - ✅ **Flexible Filtering**: Pattern-based test selection
 - ✅ **TypeScript & Lua Support**: Works with both project types
+- ✅ **Multiple Root Paths**: Scan tests from multiple directories simultaneously
 
 ## Workflow
 
@@ -62,14 +63,14 @@ node scripts/test-in-roblox-cloud.js [pattern] [options]
 - `-t, --timeout <sec>` - Task execution timeout in seconds (default: 120)
 - `-r, --rbxl <path>` - Specify rbxl file path (default: test-place.rbxl)
 - `-j, --jest` - Use jest instead of testez (default: testez)
-- `--roots <path>` - Test root paths, separated by / (default: ReplicatedStorage)
+- `--roots <path>` - Test root paths, separated by , (default: ServerScriptService,ReplicatedStorage). Use / for path hierarchy (e.g., ServerScriptService/Server)
 - `--glob <match>` - Match test files in roots
 - `--skip-build` - Skip the Rojo build step
 
 ### Examples
 
 ```bash
-# Run all tests
+# Run all tests (scans ServerScriptService and ReplicatedStorage by default)
 node scripts/test-in-roblox-cloud.js
 
 # Run tests containing "StringUtils"
@@ -83,6 +84,18 @@ node scripts/test-in-roblox-cloud.js --skip-build
 
 # Run specific test with verbose logging
 node scripts/test-in-roblox-cloud.js "should allow" -V
+
+# Scan only ReplicatedStorage
+node scripts/test-in-roblox-cloud.js --roots ReplicatedStorage
+
+# Scan custom paths (multiple roots separated by ,)
+node scripts/test-in-roblox-cloud.js --roots "ServerScriptService/Tests,ReplicatedStorage/Lib"
+
+# Scan nested directory
+node scripts/test-in-roblox-cloud.js --roots ReplicatedStorage/MyTests/Modules
+
+# Multiple nested paths
+node scripts/test-in-roblox-cloud.js --roots "ServerScriptService/Server,ReplicatedStorage/Lib"
 ```
 
 ## Environment Configuration
@@ -130,14 +143,26 @@ TEST_PLACE_ID=your_place_id
 
 ### Project Structure Support
 
-支持两种项目类型：
+**多根路径支持**:
+- 默认扫描 `ServerScriptService` 和 `ReplicatedStorage` 两个路径
+- 支持自定义多个根路径（使用 `--roots` 参数）
+- 路径导航支持 Service 和嵌套子对象
+
+**项目类型自动检测**:
+当扫描 `ReplicatedStorage` 时，会自动检测项目类型：
 - **TypeScript**: `ReplicatedStorage.rbxts_include`（优先扫描 `@white-dragon-bevy` 包，提高性能）
 - **Lua**: `ReplicatedStorage.Lib`
+- 如果未找到特定子目录，使用 `ReplicatedStorage` 本身作为测试目录
 
 **测试文件要求**:
 - 文件名必须包含 `.spec`（例如：`MyModule.spec.lua`）
 - 自动递归扫描所有子目录
 - 在执行测试前会进行语法检查，提前发现语法错误
+
+**路径分隔符**:
+- `,` 用于分隔多个根路径（例如：`--roots "ServerScriptService,ReplicatedStorage"`）
+- `/` 用于分隔路径层级（例如：`--roots "ReplicatedStorage/Lib/Tests"`）
+- 内部使用 `;` 分隔多个路径传递给 Lua 脚本
 
 ## NPM Scripts
 
