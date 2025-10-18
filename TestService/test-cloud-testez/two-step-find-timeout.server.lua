@@ -9,6 +9,7 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
@@ -149,61 +150,35 @@ end
 
 -- 初始化第一层
 local function initLayer1()
-	-- 打印调试信息
 	print("[Layer1] 开始初始化...")
-	print(string.format("[Layer1] 检查目录: rbxts_include=%s, Lib=%s, Packages=%s, TS=%s",
-		tostring(ReplicatedStorage:FindFirstChild("rbxts_include") ~= nil),
-		tostring(ReplicatedStorage:FindFirstChild("Lib") ~= nil),
-		tostring(ReplicatedStorage:FindFirstChild("Packages") ~= nil),
-		tostring(ReplicatedStorage:FindFirstChild("TS") ~= nil)
-	))
+	print("[Layer1] 扫描默认测试目录...")
 
-	-- 扫描所有可能包含测试的目录
+	-- 默认测试目标：与 start.server.lua 保持一致
+	local candidateTargets = {
+		{name = "ReplicatedStorage", instance = ReplicatedStorage},
+		{name = "ServerScriptService", instance = ServerScriptService},
+	}
+
+	-- 收集存在的目标
 	local scanDirs = {}
-
-	-- 优先级1: 特定包目录
-	if ReplicatedStorage:FindFirstChild("rbxts_include") then
-		local nodeModules = ReplicatedStorage.rbxts_include:FindFirstChild("node_modules")
-		if nodeModules and nodeModules:FindFirstChild("@white-dragon-bevy") then
+	for _, candidate in ipairs(candidateTargets) do
+		if candidate.instance then
 			table.insert(scanDirs, {
-				dir = nodeModules["@white-dragon-bevy"],
-				name = "rbxts_include/node_modules/@white-dragon-bevy"
+				dir = candidate.instance,
+				name = candidate.name
 			})
+			print(string.format("  ✓ 找到: %s", candidate.name))
+		else
+			print(string.format("  ✗ 未找到: %s", candidate.name))
 		end
 	end
 
-	-- 优先级2: TypeScript 项目目录
-	if ReplicatedStorage:FindFirstChild("TS") then
-		table.insert(scanDirs, {
-			dir = ReplicatedStorage.TS,
-			name = "TS"
-		})
-	end
-
-	-- 优先级3: rbxts_include（如果没有找到@white-dragon-bevy）
-	if ReplicatedStorage:FindFirstChild("rbxts_include") and #scanDirs == 0 then
-		table.insert(scanDirs, {
-			dir = ReplicatedStorage.rbxts_include,
-			name = "rbxts_include"
-		})
-	end
-
-	-- 优先级4: Lua 项目目录
-	if ReplicatedStorage:FindFirstChild("Lib") then
-		table.insert(scanDirs, {
-			dir = ReplicatedStorage.Lib,
-			name = "Lib"
-		})
-	end
-
-	-- 优先级5: 如果没有找到任何预期目录，扫描整个 ReplicatedStorage
 	if #scanDirs == 0 then
-		print("[Layer1] ⚠️ 未找到预期目录，尝试扫描 ReplicatedStorage 根目录")
-		table.insert(scanDirs, {
-			dir = ReplicatedStorage,
-			name = "ReplicatedStorage"
-		})
+		print("[Layer1] ⚠️ 未找到任何默认测试目录")
+		return
 	end
+
+	print(string.format("[Layer1] 将扫描 %d 个目录", #scanDirs))
 
 	-- 扫描所有目录并合并测试文件
 	allTestFiles = {}
@@ -219,7 +194,7 @@ local function initLayer1()
 
 	print(string.format("[Layer1] 总共找到 %d 个测试文件", #allTestFiles))
 
-	-- 如果没有找到测试文件，保存错误信息
+	-- 如果没有找到测试文件，显示详细信息
 	if #allTestFiles == 0 then
 		print("[Layer1] ⚠️ 警告: 没有找到任何测试文件")
 
@@ -231,8 +206,6 @@ local function initLayer1()
 				print(string.format("  - %s (%s) %s", child.Name, child.ClassName, isSpec and "[.spec]" or ""))
 			end
 		end
-
-		
 	end
 end
 

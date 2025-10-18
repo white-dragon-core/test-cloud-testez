@@ -1,8 +1,8 @@
 {
   "name": "test-cloud-testez",
-  "version": "0.1.1",
-  "description": "Roblox Cloud TestEZ Testing Tool",
-  "main": "index.js",
+  "version": "0.1.2",
+  "description": "Lightweight testing tool for running TestEZ tests in Roblox Cloud and Studio environments with direct API calls, supporting both TypeScript and Lua projects",
+  "main": "scripts/test-in-roblox-cloud.js",
   "bin": {
     "test-cloud-testez": "scripts/test-in-roblox-cloud.js"
   },
@@ -10,6 +10,7 @@
     "test": "node scripts/test-in-roblox-cloud.js",
     "test:verbose": "node scripts/test-in-roblox-cloud.js --verbose",
     "test:skip-build": "node scripts/test-in-roblox-cloud.js --skip-build",
+    "test:timeout": "node scripts/test-in-roblox-cloud.js --timeout 300",
     "build": "rojo build default.project.json -o test-place.rbxl",
     "legacy": "node scripts/legacy.js"
   },
@@ -17,10 +18,40 @@
     "roblox",
     "testing",
     "testez",
-    "cloud"
+    "cloud",
+    "roblox-cloud",
+    "open-cloud",
+    "luau",
+    "roblox-ts",
+    "typescript",
+    "lua",
+    "test-runner",
+    "ci-cd",
+    "automation",
+    "studio",
+    "wally",
+    "rojo"
   ],
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "scripts/",
+    "TestService/",
+    "README.md",
+    "CLAUDE.md",
+    ".env.example"
+  ],
+  "author": "White Dragon Core",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/white-dragon-core/test-cloud-testez.git"
+  },
+  "homepage": "https://github.com/white-dragon-core/test-cloud-testez#readme",
+  "bugs": {
+    "url": "https://github.com/white-dragon-core/test-cloud-testez/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "localtunnel": "^2.0.2"
