@@ -1,0 +1,32 @@
+{
+  "name": "test-cloud-testez",
+  "version": "0.1.1",
+  "description": "Roblox Cloud TestEZ Testing Tool",
+  "main": "index.js",
+  "bin": {
+    "test-cloud-testez": "scripts/test-in-roblox-cloud.js"
+  },
+  "scripts": {
+    "test": "node scripts/test-in-roblox-cloud.js",
+    "test:verbose": "node scripts/test-in-roblox-cloud.js --verbose",
+    "test:skip-build": "node scripts/test-in-roblox-cloud.js --skip-build",
+    "build": "rojo build default.project.json -o test-place.rbxl",
+    "legacy": "node scripts/legacy.js"
+  },
+  "keywords": [
+    "roblox",
+    "testing",
+    "testez",
+    "cloud"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.0",
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "js-yaml": "^4.1.0"
+  }
+}

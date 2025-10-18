@@ -1,0 +1,8 @@
+Packages/
+*.rbxl
+.test-result/
+scripts/.temp-test-script.lua
+node_modules/
+*.log
+sourcemap.json
+.env*
