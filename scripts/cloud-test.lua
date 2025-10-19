@@ -164,6 +164,11 @@ local testezLoadSuccess, testezLoadError = pcall(function()
 		return
 	end
 
+	if ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("TestEZ") then
+		TestEZ = require(ReplicatedStorage.Packages.TestEZ)
+		return
+	end
+
 	-- 尝试 2: node_modules (TypeScript 项目)
 	if ReplicatedStorage:FindFirstChild("rbxts_include") then
 		local nodeModules = ReplicatedStorage.rbxts_include:FindFirstChild("node_modules")

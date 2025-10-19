@@ -1,0 +1,22 @@
+{
+    "name": "test-cloud-testez-tools",
+    "owner": {
+      "name": "White Dragon Core",
+      "email": "white-dragon-core@gmail.com"
+    },
+    "metadata": {
+        "description": "TestEZ testing tool for Roblox Cloud and Studio environments with direct API calls, supporting both TypeScript and Lua projects",
+        "version": "0.1.3"
+      },
+    "plugins": [
+      {
+        "name": "test-cloud-testez-formatter",
+        "source": "./",
+        "description": "Automatic code formatting on save",
+        "strict": false,
+        "skills": [
+          "./docs"
+        ]
+      }
+    ]
+  }
