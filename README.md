@@ -110,35 +110,16 @@ wally install
         "test-cloud-testez": {
             "$path": "node_modules/test-cloud-testez/TestService/test-cloud-testez"
         }
+      }
     }
   }
 }
 ```
 
-**关键配置说明：**
-
-1. **添加 TestService 节点**：
-   ```json
-   "TestService": {
-     "$className": "TestService",
-     "test-cloud-testez": {
-       "$path": "Packages/test-cloud-testez"
-     }
-   }
-   ```
-
-2. **同步到 Studio**：
-   ```bash
-   # 启动 Rojo 服务器
-   rojo serve default.project.json
-   ```
-
-   然后在 Roblox Studio 中连接 Rojo 插件。
-
 ### 在 Studio 中运行测试
 
 1. 确保已通过 Rojo 同步项目
-2. 在 Studio 中点击 **Run** (F5) 或 **Play** (F8)
+2. 在 Studio 中点击  **Play** (F8)
 3. 测试会自动运行，结果显示在 Output 窗口
 
 ### 配置测试目标
@@ -466,25 +447,6 @@ printMessages: []
 - 使用 YAML 格式便于人工阅读和 Git diff
 
 ## API Documentation
-
-### Roblox Cloud APIs Used
-
-**Place Publishing (v1)**:
-```
-POST /universes/v1/{universeId}/places/{placeId}/versions?versionType=Saved
-```
-
-**Luau Execution (v2)**:
-```
-POST /cloud/v2/universes/{universeId}/places/{placeId}/versions/{versionId}/luau-execution-session-tasks
-```
-
-**Task Status (v2)**:
-```
-GET /cloud/v2/universes/{universeId}/places/{placeId}/versions/{versionId}/luau-execution-sessions/{sessionId}/tasks/{taskId}
-```
-
-All APIs require `x-api-key` header with your Roblox Open Cloud API key.
 
 ## Writing Tests
 
