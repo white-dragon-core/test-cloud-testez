@@ -7,6 +7,7 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 // 使用 dotenv 加载 .env.roblox 环境变量（静默模式）
 require('dotenv').config({
@@ -14,12 +15,22 @@ require('dotenv').config({
   debug: false  // 关闭调试输出
 });
 
+// 创建代理 agent（如果设置了环境变量）
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+
 /**
  * 通用HTTPS请求函数
  */
 function httpsRequest(url, options = {}) {
   return new Promise((resolve, reject) => {
-    const req = https.request(url, options, (res) => {
+    // 如果有代理，添加 agent 选项
+    const requestOptions = {
+      ...options,
+      agent: proxyAgent
+    };
+
+    const req = https.request(url, requestOptions, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {

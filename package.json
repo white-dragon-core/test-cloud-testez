@@ -1,6 +1,6 @@
 {
   "name": "test-cloud-testez",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Lightweight testing tool for running TestEZ tests in Roblox Cloud and Studio environments with direct API calls, supporting both TypeScript and Lua projects",
   "main": "scripts/test-in-roblox-cloud.js",
   "bin": {
@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
+    "https-proxy-agent": "^7.0.6",
     "js-yaml": "^4.1.0"
   }
 }

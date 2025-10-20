@@ -137,11 +137,18 @@ TEST_PLACE_ID=<place-id>            # Test Place ID
 # RBXCLOUD_API_KEY=<your-api-key>
 # RBXCLOUD_UNIVERSE_ID=<universe-id>
 # RBXCLOUD_PLACE_ID=<place-id>
+
+# 代理配置（可选）
+# 如果需要通过代理访问 Roblox API，配置以下任一变量
+HTTPS_PROXY=http://proxy.example.com:8080    # HTTPS 代理
+# HTTP_PROXY=http://proxy.example.com:8080   # HTTP 代理（HTTPS_PROXY 优先）
 ```
 
 环境变量由`rbx-cloud-api.js`自动加载（使用dotenv，静默模式）。
 
-**优先级**: 新名称 > 旧名称（如果同时定义了两种名称，将使用新名称）
+**优先级**:
+- API Key: 新名称 > 旧名称（如果同时定义了两种名称，将使用新名称）
+- 代理: HTTPS_PROXY > HTTP_PROXY
 
 ### Git Ignore
 
@@ -206,6 +213,12 @@ x-api-key: {apiKey}
 GET /cloud/v2/universes/{universeId}/places/{placeId}/versions/{versionId}/luau-execution-sessions/{sessionId}/tasks/{taskId}
 x-api-key: {apiKey}
 ```
+
+**代理支持**:
+- 使用 `https-proxy-agent` 支持 HTTP/HTTPS 代理
+- 自动从环境变量 `HTTPS_PROXY` 或 `HTTP_PROXY` 读取代理配置
+- 支持认证代理：`http://username:password@proxy.example.com:8080`
+- 所有 API 请求（上传、执行、查询）都会通过代理
 
 ### Cloud API Limitations
 
