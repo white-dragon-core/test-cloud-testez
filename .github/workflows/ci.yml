@@ -22,16 +22,14 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Setup Aftman
-      uses: ok-nick/setup-aftman@v0.4.1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Setup Rokit
+      uses: CompeyDev/setup-rokit@v0.1.2
 
     - name: Install Wally packages
-      run: ~/.aftman/bin/wally install
+      run: wally install
 
     - name: Build with Rojo
-      run: ~/.aftman/bin/rojo build default.project.json -o test-place.rbxl
+      run: rojo build default.project.json -o test-place.rbxl
 
     - name: Run tests in Roblox Cloud
       env:
