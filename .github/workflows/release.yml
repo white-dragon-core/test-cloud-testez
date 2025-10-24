@@ -52,7 +52,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish to npm
-      if: startsWith(github.ref, 'refs/tags/v')
+      # 只在配置了 NPM_TOKEN 时发布
+      if: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.NPM_TOKEN != '' }}
       run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Skip npm publish (no token configured)
+      if: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.NPM_TOKEN == '' }}
+      run: echo "⚠️ Skipping npm publish - NPM_TOKEN not configured in repository secrets"

@@ -32,11 +32,17 @@ jobs:
       run: rojo build default.project.json -o test-place.rbxl
 
     - name: Run tests in Roblox Cloud
+      # 只在配置了 secrets 时运行测试
+      if: ${{ secrets.ROBLOX_API_KEY != '' }}
       env:
         ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
         UNIVERSE_ID: ${{ secrets.UNIVERSE_ID }}
         TEST_PLACE_ID: ${{ secrets.TEST_PLACE_ID }}
       run: node scripts/test-in-roblox-cloud.js --skip-build -V
+
+    - name: Skip tests (no secrets configured)
+      if: ${{ secrets.ROBLOX_API_KEY == '' }}
+      run: echo "⚠️ Skipping cloud tests - ROBLOX_API_KEY not configured in repository secrets"
 
     - name: Upload test results
       if: always()
