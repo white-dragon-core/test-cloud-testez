@@ -9,15 +9,27 @@ const fs = require('fs');
 const path = require('path');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
-// 使用 dotenv 加载 .env.roblox 环境变量（静默模式）
+// 使用 dotenv 加载环境变量（静默模式）
+// 优先级：.env > .env.roblox（先加载 .env.roblox 作为默认值，再加载 .env 覆盖）
 require('dotenv').config({
   path: path.join(process.cwd(), '.env.roblox'),
   debug: false  // 关闭调试输出
+});
+// .env 文件可以覆盖 .env.roblox 中的配置（用于本地开发）
+require('dotenv').config({
+  path: path.join(process.cwd(), '.env'),
+  debug: false,
+  override: true  // 覆盖 .env.roblox 中的变量
 });
 
 // 创建代理 agent（如果设置了环境变量）
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+
+// 输出代理配置信息（仅在设置了代理时）
+if (proxyAgent) {
+  console.log(`🌐 使用代理: ${proxyUrl}`);
+}
 
 /**
  * 通用HTTPS请求函数
@@ -30,10 +42,23 @@ function httpsRequest(url, options = {}) {
       agent: proxyAgent
     };
 
+    // 输出请求信息（如果使用代理）
+    if (proxyAgent) {
+      const urlObj = new URL(url);
+      console.log(`📡 [代理请求] ${options.method || 'GET'} ${urlObj.hostname}${urlObj.pathname}`);
+      console.log(`   通过代理: ${proxyUrl}`);
+    }
+
+    const startTime = Date.now();
     const req = https.request(url, requestOptions, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
+        const elapsed = Date.now() - startTime;
+        if (proxyAgent) {
+          console.log(`✅ [代理响应] HTTP ${res.statusCode} (耗时: ${elapsed}ms)`);
+        }
+
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve({
             statusCode: res.statusCode,
@@ -46,7 +71,13 @@ function httpsRequest(url, options = {}) {
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      const elapsed = Date.now() - startTime;
+      if (proxyAgent) {
+        console.log(`❌ [代理错误] ${err.message} (耗时: ${elapsed}ms)`);
+      }
+      reject(err);
+    });
 
     if (options.body) {
       req.write(options.body);

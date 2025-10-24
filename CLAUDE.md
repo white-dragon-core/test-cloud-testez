@@ -125,7 +125,12 @@ node scripts/test-in-roblox-cloud.js --skip-build   # 跳过构建步骤
 
 ### Required Environment Variables
 
-在`.env.roblox`中配置：
+支持两种环境变量文件（推荐使用 `.env.roblox`）：
+
+1. **`.env.roblox`** - 项目专用配置（推荐）
+2. **`.env`** - 本地开发配置（可选，优先级更高）
+
+**配置示例（.env.roblox）**:
 
 ```bash
 # 推荐使用新的环境变量名（简洁清晰）
@@ -146,9 +151,14 @@ HTTPS_PROXY=http://proxy.example.com:8080    # HTTPS 代理
 
 环境变量由`rbx-cloud-api.js`自动加载（使用dotenv，静默模式）。
 
-**优先级**:
+**加载优先级**:
+- 文件优先级: `.env` > `.env.roblox` （`.env` 可以覆盖 `.env.roblox` 中的配置）
 - API Key: 新名称 > 旧名称（如果同时定义了两种名称，将使用新名称）
 - 代理: HTTPS_PROXY > HTTP_PROXY
+
+**使用场景**:
+- `.env.roblox`: 团队共享的默认配置（可以提交到 Git，但包含敏感信息时应排除）
+- `.env`: 本地开发专用配置（不提交到 Git），用于覆盖 `.env.roblox` 的配置
 
 ### Git Ignore
 
