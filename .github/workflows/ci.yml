@@ -28,10 +28,10 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install Wally packages
-      run: wally install
+      run: ~/.aftman/bin/wally install
 
     - name: Build with Rojo
-      run: rojo build default.project.json -o test-place.rbxl
+      run: ~/.aftman/bin/rojo build default.project.json -o test-place.rbxl
 
     - name: Run tests in Roblox Cloud
       env:
