@@ -1,0 +1,13 @@
+{
+  "name": "test-cloud-testez",
+  "description": "test-cloud-testez",
+  "version": "0.3.0",
+  "author": {
+    "name": "White Dragon Core",
+    "email": "white-dragon-core@gmail.com"
+  },
+  "homepage": "https://github.com/white-dragon-core/test-cloud-testez",
+  "repository": "https://github.com/white-dragon-core/test-cloud-testez",
+  "license": "MIT",
+  "keywords": ["test-cloud-testez", "testez", "cloud", "roblox-cloud", "open-cloud", "luau", "roblox-ts", "typescript", "lua", "test-runner", "ci-cd", "automation", "studio", "wally", "rojo"]
+}
