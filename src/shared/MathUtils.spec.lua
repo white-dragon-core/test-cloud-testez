@@ -10,10 +10,6 @@ return function()
 			expect(MathUtils.add(2, 3)).to.equal(5)
 		end)
 
-		it("should fail", function()
-			error("This test should fail")
-		end)
-
 		it("should add negative numbers", function()
 			expect(MathUtils.add(-5, -3)).to.equal(-8)
 		end)
