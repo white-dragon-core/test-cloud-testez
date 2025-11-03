@@ -1,5 +1,5 @@
 ---
-name: roblox-testez-pro
+name: test-cloud-testez
 description: Write and manage Roblox unit tests using TestEZ, a BDD-style testing framework. Supports creating test specs with describe/it blocks, assertions with expect, lifecycle hooks (beforeAll/afterEach), and best practices for testing Roblox game code.
 ---
 

@@ -10,13 +10,10 @@
       },
     "plugins": [
       {
-        "name": "test-cloud-testez-formatter",
+        "name": "test-cloud-testez",
         "source": "./",
         "description": "Automatic code formatting on save",
-        "strict": false,
-        "skills": [
-          "./docs"
-        ]
+        "strict": false
       }
     ]
   }
