@@ -194,6 +194,14 @@ The skill encourages:
 ## 指令
 - **npx test-cloud-testez**: 使用 `roblox cloud`进行测试, 用于 `ai 开发`和 `ci`, 一般配置为 `npm test`
 
+## 常见问题
+
+**报错:can't get type descriptor for id=nil text=nil**
+```错误例子
+ReplicatedStorage.rbxts_include.node_modules.@white-dragon-bevy.bevy_framework.bevy_ecs.resource:87: insertResource: can't get type descriptor for id=nil text=nil. This is likely a macro issue - make sure you're calling insertResource correctly.
+```
+`解决方案`: 删除 ./out/ 目录, 重新编译.
+
 ## Resources
 - [studio-testing](./references/testeez-studio-testing.md)
 - [cloud-testing](./references/testeez-cloud-testing.md)
