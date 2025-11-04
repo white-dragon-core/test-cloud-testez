@@ -7,6 +7,10 @@ description: Write and manage Roblox unit tests using TestEZ, a BDD-style testin
 
 A comprehensive skill for writing and managing Roblox unit tests using TestEZ, a BDD-style testing framework.
 
+**注意:**
+首次运行时, 请将 `./reference/testez-globals.d.ts` 复制到 `src/types/` 目录。
+
+
 ## What is TestEZ?
 
 TestEZ is a testing framework for Roblox that provides a familiar, Jest-like API for writing unit tests in Luau. It supports:
@@ -178,6 +182,11 @@ The skill encourages:
 ## 云测试
 
 在 Roblox Cloud 和 Studio 环境运行 TestEZ 测试。支持 TypeScript/Lua 项目，提供 Cloud API 测试、Studio 本地测试、超时调试等功能。可配置测试路径、环境变量、输出格式。
+
+**云打印**
+❌ print(),warnt() 函数在云测试环境下无法输出到日志.
+✅ _G.print() 可以输出到日志, 用来临时分析. 注意: 分析完毕后立刻移除 _G.print(), 否则会导致系统错误.
+
 
 ## 安装
 - `npm install test-cloud-testez` 或 `pnpm add test-cloud-testez`
