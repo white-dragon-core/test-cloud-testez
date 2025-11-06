@@ -60,8 +60,20 @@ function parseArgs() {
     } else if (arg === '-j' || arg === '--jest') {
       config.jest = true;
     } else if (arg === '--roots') {
-      // 使用 ',' 分隔多个根路径，'/' 用于路径层级
-      config.roots = args[++i].split(',').map(p => p.trim());
+      // 支持空格分隔多个路径，也支持逗号分隔（向后兼容）
+      // 收集所有非选项参数作为根路径，直到遇到下一个选项
+      const rootPaths = [];
+      i++; // 移到下一个参数
+      while (i < args.length && !args[i].startsWith('-')) {
+        // 支持逗号分隔的路径
+        const paths = args[i].split(',').map(p => p.trim()).filter(p => p);
+        rootPaths.push(...paths);
+        i++;
+      }
+      i--; // 回退一步，因为外层循环会再次递增
+      if (rootPaths.length > 0) {
+        config.roots = rootPaths;
+      }
     } else if (arg === '--glob') {
       config.glob = args[++i];
     } else if (!arg.startsWith('-')) {
@@ -95,17 +107,20 @@ Options:
   -t, --timeout <sec> Task execution timeout in seconds (default: 120)
   -r, --rbxl <path>   Specify rbxl file path to upload (default: test-place.rbxl)
   -j, --jest          Use jest instead of testez (default: testez)
-      --roots <path>  Test root paths, separated by , (default: ServerScriptService,ReplicatedStorage)
+      --roots <path>  Test root paths, space-separated (default: ServerScriptService ReplicatedStorage)
+                      Also supports comma-separated for backward compatibility
                       Use / for path hierarchy (e.g., ServerScriptService/Server)
       --glob <match>  Match test files in roots
       --skip-build    Skip the Rojo build step
 
 Examples:
-  rbxcloud-test                    # Run all tests
-  rbxcloud-test loop               # Run only tests containing "loop"
-  rbxcloud-test --verbose          # Verbose output mode
-  rbxcloud-test --skip-build       # Skip build, upload and test directly
-  rbxcloud-test "should allow" -V  # Run specific test with verbose logging
+  rbxcloud-test                                    # Run all tests
+  rbxcloud-test loop                               # Run only tests containing "loop"
+  rbxcloud-test --verbose                          # Verbose output mode
+  rbxcloud-test --skip-build                       # Skip build, upload and test directly
+  rbxcloud-test "should allow" -V                  # Run specific test with verbose logging
+  rbxcloud-test --roots ServerScriptService        # Test only ServerScriptService
+  rbxcloud-test --roots ServerScriptService Shared # Test multiple roots (space-separated)
 
 Environment Variables (in .env.roblox):
   ROBLOX_API_KEY         Roblox Open Cloud API Key (required)
