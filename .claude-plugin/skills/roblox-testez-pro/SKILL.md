@@ -298,6 +298,9 @@ ServerScriptService.Server.MyModule:42
 ### Q: 报错: can't get type descriptor for id=nil text=nil
 **A**: 删除 `./out/` 目录，重新编译：`npx rbxtsc`
 
+### Q: 报错: Cannot find name 'expect/it/describe/l...'
+**A**: 写入 testez.d.ts, 包含定义文件: `/// <reference types="@rbxts/test-cloud-testez/globals" />`
+
 ## 📚 Resources
 
 ### 文档
