@@ -19,6 +19,21 @@ function ExpectationContext.new(parent)
 		_extensions = parent and copy(parent._extensions) or {},
 	}
 
+	-- Auto-load extended matchers on the root context (when parent is nil)
+	if not parent then
+		-- Load extended matchers module
+		local success, ExtendedMatchers = pcall(function()
+			return require(script.Parent.ExpectationMatchers)
+		end)
+
+		-- If the module exists, register all matchers
+		if success and ExtendedMatchers then
+			for key, value in pairs(ExtendedMatchers) do
+				self._extensions[key] = value
+			end
+		end
+	end
+
 	return setmetatable(self, ExpectationContext)
 end
 

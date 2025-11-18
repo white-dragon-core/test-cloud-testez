@@ -35,13 +35,58 @@ TestEZ is a testing framework for Roblox that provides a familiar, Jest-like API
 - `expect(x).to.be.a("type")` - 类型检查
 - `expect(x).to.be.ok()` - truthy 检查
 
-**数值比较**（TestEZ 没有 `.greaterThan()`）：
+**数值比较**
 ```lua
 expect(score > 100).to.equal(true)   -- ✅ 大于
 expect(level < 10).to.equal(true)    -- ✅ 小于
 ```
 
-详见下方「数值比较的正确写法」部分。
+## 🔧 扩展 Matchers (ExpectationMatchers)
+
+项目内置了扩展 matchers, 无需引用, 保留 testtez使用习惯, 可以透明调用。
+
+**表比较**:
+- `deepEqual(value)` - 深度相等比较（递归比较表内容）
+- `members(list)` - 数组包含所有成员（无序）
+
+**字符串检查**:
+- `include(substring)` / `contain(substring)` - 包含子字符串/元素
+- `match(pattern)` - 匹配 Lua 模式
+- `startWith(prefix)` - 以某前缀开始
+- `endWith(suffix)` - 以某后缀结束
+
+**数值比较**:
+- `greaterThan(value)` / `above(value)` - 大于
+- `lessThan(value)` / `below(value)` - 小于
+- `greaterThanOrEqual(value)` / `atLeast(value)` - 大于等于
+- `lessThanOrEqual(value)` / `atMost(value)` - 小于等于
+- `within(min, max)` - 在范围内（含边界）
+- `NaN()` - 是 NaN
+
+**长度/大小**:
+- `lengthOf(length)` - 字符串或表的长度
+- `empty()` - 为空（表或字符串）
+
+**属性/键检查**:
+- `property(name, value?)` - 有属性（可选检查值）
+- `keys(...)` - 有特定键
+
+**值检查**:
+- `oneOf(list)` - 是列表中的一个
+- `nilValue()` - 是 nil
+- `trueValue()` - 是 true（非 truthy）
+- `falseValue()` - 是 false（非 falsy）
+
+**示例**:
+```lua
+expect({a = 1, b = 2}).to.deepEqual({a = 1, b = 2})
+expect("hello world").to.include("world")
+expect(10).to.greaterThan(5)
+expect({1, 2, 3}).to.lengthOf(3)
+expect({name = "test"}).to.property("name", "test")
+expect(5).to.within(1, 10)
+expect("test.lua").to.endWith(".lua")
+```
 
 ## 📦 安装与配置
 
