@@ -12,6 +12,7 @@ A comprehensive tool for writing and running Roblox unit tests using TestEZ in R
 ✅ **内置 TestEZ** - TestEZ 源码内置在 `TestService/test-cloud-testez/testez/`，无需外部依赖
 ✅ **改进的错误处理** - require() 错误提供详细的位置信息
 ✅ **云端测试** - 直接在 Roblox Cloud 中运行测试，无需 Studio
+✅ **Studio测试** - 直接在 Roblox Studio 中按 F8 启动测试.
 ✅ **自动测试发现** - 递归扫描 `.spec` 文件
 ✅ **详细报告** - YAML 格式测试结果，易于阅读和版本控制
 
@@ -117,14 +118,6 @@ TEST_PLACE_ID=<place-id>            # Test Place ID
 HTTPS_PROXY=http://proxy.example.com:8080
 ```
 
-### TestEZ 位置
-
-TestEZ 源码位于: `TestService/test-cloud-testez/testez/`
-
-- ✅ 无需 `wally install`
-- ✅ 无需 `@rbxts/testez` npm 包
-- ✅ 包含自定义改进（require() 错误处理）
-
 ## Using This Skill
 
 When active, this skill helps Claude:
@@ -147,50 +140,6 @@ Demonstrates fundamental TestEZ concepts:
 - Error handling and testing exceptions
 - Working with Luau data types
 
-**重要：TestEZ expect().to 可用接口列表**（防止拼写错误）
-
-TestEZ 官方提供的 expect().to 匹配器（matchers）只有以下 5 个：
-
-1. **`.to.equal(value)`** - 检查值是否相等
-   ```lua
-   expect(2 + 2).to.equal(4)
-   ```
-
-2. **`.to.be.near(value, limit?)`** - 检查数值是否接近（用于浮点数比较）
-   ```lua
-   expect(0.1 + 0.2).to.be.near(0.3, 0.0001)
-   ```
-
-3. **`.to.throw(messageSubstring?)`** - 检查函数是否抛出错误
-   ```lua
-   expect(function() error("fail") end).to.throw()
-   expect(function() error("invalid") end).to.throw("invalid")
-   ```
-
-4. **`.to.be.a(typeName)`** 或 **`.to.be.an(typeName)`** - 检查值类型
-   ```lua
-   expect(42).to.be.a("number")
-   expect("hello").to.be.a("string")
-   ```
-
-5. **`.to.be.ok()`** - 检查值是否为 truthy（非 nil）
-   ```lua
-   expect(true).to.be.ok()
-   expect(nil).never.to.be.ok()
-   ```
-
-**❌ 不存在的接口**（AI 常犯的错误）：
-- `.to.largeerThan()` ❌ 不存在（应该是 `expect(a > b).to.equal(true)`）
-- `.to.greaterThan()` ❌ 不存在
-- `.to.lessThan()` ❌ 不存在
-- `.to.contain()` ❌ 不存在
-- `.to.include()` ❌ 不存在
-- `.to.haveLength()` ❌ 不存在
-
-**⚠️ 注意事项**：
-- TestEZ 没有 `.largerThan()`, `.greaterThan()`, `.lessThan()` 等数值比较匹配器
-- 需要使用逻辑表达式配合 `.equal()` 进行比较
-- 可以使用 `.never` 来否定断言
 
 ### lifecycle.spec.lua
 Shows lifecycle hook usage:
@@ -243,11 +192,6 @@ The skill encourages:
 - ✅ Mocking external dependencies
 - ✅ Testing edge cases and error conditions
 
-## Resources
-
-- [TestEZ Documentation](https://roblox.github.io/testez/)
-- [Luau Language Reference](https://luau-lang.org/)
-- [Roblox Testing Best Practices](https://create.roblox.com/docs/scripting/testing)
 
 
 ## 🚀 运行测试
@@ -294,7 +238,8 @@ npm test -- -t 180
 
 ✅ **普通 print() 和 warn()** - 使用 LogService.MessageOut 事件自动捕获
 
-**注意**: 调试完成后立即移除 `print()` 语句，避免影响性能。
+**重要**: 禁止任何测试用例输出 `print()` 或 `warn()`, 以免污染测试环境
+**注意**: 紧急情况下进行调试, 允许使用 `print()`, 调试完成后立即移除 `print()` 语句.
 
 ```lua
 return function()
@@ -344,21 +289,11 @@ ServerScriptService.Server.MyModule:42
 **A**: 删除 `./out/` 目录，重新编译：`npx rbxtsc`
 
 ### Q: 报错: Cannot find name 'expect/it/describe/l...'
-**A**: 写入 testez.d.ts, 包含定义文件: `/// <reference types="@rbxts/test-cloud-testez/globals" />`
+**A**: 写入 testez.d.ts, 包含定义文件: `/// <reference types="@rbxts/test-cloud-testez/index" />`
 
 ## 📚 Resources
 
 ### 文档
-- [TestEZ 官方文档](https://roblox.github.io/testez/)
-- [Luau 语言参考](https://luau-lang.org/)
-- [Roblox 测试最佳实践](https://create.roblox.com/docs/scripting/testing)
-
 ### 本项目文档
 - [README.md](../../../README.md) - 项目概览
 - [CLAUDE.md](../../../CLAUDE.md) - Claude Code 使用说明
-- [TESTEZ_REQUIRE_ERROR_FIX.md](../../../TESTEZ_REQUIRE_ERROR_FIX.md) - require() 错误处理改进
-- [TESTEZ_MIGRATION.md](../../../TESTEZ_MIGRATION.md) - TestEZ 迁移文档
-
-### 参考资料
-- [Studio 测试指南](./references/testeez-studio-testing.md)
-- [Cloud 测试指南](./references/tetez-cloud-testing.md)
