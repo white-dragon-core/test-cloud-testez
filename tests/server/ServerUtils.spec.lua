@@ -3,7 +3,7 @@
 return function()
 	local ServerUtils = require(script.Parent.ServerUtils)
 
-	_G.print("🖥️ Starting ServerUtils tests...")
+	print("🖥️ Starting ServerUtils tests...")
 
 	describe("ServerUtils.hasPermission", function()
 		it("should grant admin permission to userId 1", function()
@@ -120,5 +120,5 @@ return function()
 		end)
 	end)
 
-	_G.print("✅ ServerUtils tests completed")
+	print("✅ ServerUtils tests completed")
 end

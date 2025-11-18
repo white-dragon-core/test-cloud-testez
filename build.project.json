@@ -1,0 +1,35 @@
+{
+  "name": "test-cloud-testez",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Lib": {
+        "$path": "tests/shared"
+      },
+      "rbxts_include": {
+				"$className": "Folder",
+				"node_modules": {
+					"$className": "Folder",
+					"@rbxts": {
+					  "$className": "Folder",
+            "test-cloud-testez": {
+              "$path": "src"
+            }
+					}
+				}
+			}
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "tests/server"
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "$path": "TestService"
+    }
+  }
+}
+

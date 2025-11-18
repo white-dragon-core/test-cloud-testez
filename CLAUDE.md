@@ -39,7 +39,7 @@ This is a testing tool for running TestEZ tests in Roblox Cloud environment. It 
 在Roblox Cloud中执行的测试脚本，核心功能：
 
 1. **环境检测**: 设置`_G.__isInCloud__`标志，供TypeScript代码检测云端环境
-2. **输出捕获**: 重写全局`print/warn`函数（在require TestEZ之前），捕获所有测试输出
+2. **输出捕获**: 使用 LogService.MessageOut 事件捕获所有测试输出
 3. **最小化Reporter**: 使用 SilentReporter 减少运行时开销
 4. **项目类型支持**:
    - TypeScript项目: `ReplicatedStorage.rbxts_include`（优先使用 `@white-dragon-bevy` 包提高性能）
@@ -241,34 +241,37 @@ x-api-key: {apiKey}
 ### Cloud API Limitations
 
 1. **只能捕获返回值**: Luau Execution API只捕获脚本的return值
-2. **LogService不可用**: Cloud环境中LogService事件不会触发
+2. **LogService 事件异步触发**: Cloud环境中 LogService.MessageOut 事件可以触发，但是**异步的**
 3. **解决方案**:
-   - 重写全局print/warn函数（在require TestEZ之前）并设置到 `_G.print` / `_G.warn`
-   - 测试文件中使用 `_G.print()` 来输出可被捕获的消息
+   - 使用 LogService.MessageOut 连接捕获所有 print/warn 输出（包括测试模块内的普通 `print()` 调用）
+   - 在返回结果前等待几帧（`task.wait()`），让 LogService 有时间触发所有待处理的事件
    - 使用 SilentReporter 最小化运行时开销
    - 通过JSON返回所有信息（测试统计、错误、堆栈跟踪、捕获输出）
 4. **超时配置**: executeLuau支持timeout参数（1-300秒范围），默认300秒
 
 ### Print 输出捕获
 
-测试文件中需要使用 `_G.print()` 和 `_G.warn()` 来输出消息：
+测试文件中可以直接使用普通的 `print()` 和 `warn()` 函数：
 
 ```lua
 return function()
-    _G.print("🧪 Starting tests...")
+    print("🧪 Starting tests...")
 
     describe("MyModule", function()
         it("should work", function()
-            _G.print("Testing something")
+            print("Testing something")
             expect(true).to.equal(true)
         end)
     end)
 end
 ```
 
-捕获的输出会：
-- 保存在 `.test-result/*.json` 文件的 `printMessages` 字段
-- 在 verbose 模式（`-V`）下显示在控制台
+**捕获机制**:
+- `cloud-test.lua` 使用 LogService.MessageOut 事件捕获所有日志消息
+- 在测试完成后等待 10 帧，确保所有异步事件都被触发
+- 捕获的输出会：
+  - 保存在 `.test-result/*.yaml` 文件的 `printMessages` 字段
+  - 在 verbose 模式（`-V`）下显示在控制台
 
 ### Test Filtering
 

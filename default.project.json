@@ -1,23 +1,8 @@
 {
-  "name": "test-cloud-testez",
-  "tree": {
-    "$className": "DataModel",
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-      "Lib": {
-        "$path": "src/shared"
-      }
-    },
-    "ServerScriptService": {
-      "$className": "ServerScriptService",
-      "Server": {
-        "$path": "src/server"
-      }
-    },
-    "TestService": {
-      "$className": "TestService",
-      "$path": "TestService"
+    "name": "test-cloud-testez",
+    "tree": {
+        "$path": "src"
     }
   }
-}
-
+  
+  

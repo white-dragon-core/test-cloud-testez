@@ -1,20 +1,7 @@
 /// <reference types="@rbxts/types" />
 
-import Expectation from "./TestService/test-cloud-testez/testez/Expectation";
-import Context from "./TestService/test-cloud-testez/testez/Context";
-
-
-declare global {
-    interface _G {
-        /**
-         * 仅供 testez cloud 调试使用, 调试完毕后必须删除.
-         * @param args 
-         * @returns 
-         */
-        print: (...args: any[]) => void
-    }
-}
-
+import Expectation from "./src/test-cloud-testez/Expectation";
+import Context from "./src/test-cloud-testez/Context";
 export {};
 
 

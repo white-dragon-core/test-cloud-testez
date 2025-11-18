@@ -3,23 +3,18 @@
 
 	功能说明：
 	1. 在 Roblox Cloud 环境中运行 TestEZ 测试
-	2. 根据是否有 testNamePattern 决定使用哪种 Reporter：
-	   - 有 pattern：使用 CustomReporter 捕获详细日志（测试树、状态标记等）
-	   - 无 pattern：使用 TextReporter 正常输出（日志被丢弃）
-	3. 重写全局 print/warn 函数捕捉测试执行期间的所有输出
-	4. 将测试结果（统计、错误、日志、print消息）编码为 JSON 返回
+	2. 使用 SilentReporter 最小化运行时开销
+	3. 使用 LogService.MessageOut 捕捉测试执行期间的所有输出
+	4. 将测试结果（统计、错误、print消息）编码为 JSON 返回
 
-	为什么需要自定义 Reporter？
+	为什么使用 LogService？
 	- Roblox Cloud Luau Execution API 只捕获脚本的 return 值
-	- CustomReporter 将测试报告存入数组而不是 print()，从而能够返回详细日志
-
-	为什么重写 print/warn？
-	- LogService.MessageOut 在 Cloud 环境中不会触发（安全限制）
-	- 通过重写全局函数，可以在函数调用时直接捕获参数
-	- 这样可以在云端测试中看到测试内部的 print/warn 输出
+	- LogService.MessageOut 可以捕获所有 print/warn 输出（包括测试模块内的）
+	- 无需重写全局 print 函数，测试代码可以直接使用 print()
 
 	模板变量：
 	- TEST_NAME_PATTERN: 由 JS 脚本注入的测试名称过滤模式（在代码中使用占位符）
+	- ROOTS: 测试目录路径（用 ';' 分隔多个路径）
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -31,54 +26,23 @@ end
 -- 在测试执行前设置全局标志,供 TypeScript 代码检测云端测试环境
 _G.__isInCloud__ = true
 
--- 创建数组来存储 print 输出（必须在重写函数之前创建）
+-- 创建数组来存储 print 输出
 local capturedPrintMessages = {}
 
--- 保存原始的 print/warn 函数
-local originalPrint = print
-local originalWarn = warn
+-- 使用 LogService 捕获所有 print/warn 输出
+local LogService = game:GetService("LogService")
 
--- 重写全局 print 函数来捕获输出（在 require TestEZ 之前）
-local function captureArgs(...)
-	local args = {...}
-	local parts = {}
-	for i, arg in ipairs(args) do
-		parts[i] = tostring(arg)
-	end
-	return table.concat(parts, " ")
-end
-
-print = function(...)
-	local message = captureArgs(...)
+-- 连接 MessageOut 事件来捕获所有日志消息
+local connection = LogService.MessageOut:Connect(function(message, messageType)
 	table.insert(capturedPrintMessages, {
 		message = message,
-		type = "print",
+		type = messageType.Name,  -- "MessageOutput", "MessageInfo", "MessageWarning", "MessageError"
 		timestamp = os.time()
 	})
-	originalPrint(...)
-end
-
-warn = function(...)
-	local message = captureArgs(...)
-	table.insert(capturedPrintMessages, {
-		message = message,
-		type = "warn",
-		timestamp = os.time()
-	})
-	originalWarn(...)
-end
-
--- 同时更新 _G 中的引用
-_G.print = print
-_G.warn = warn
-
+end)
 
 -- 引入 HttpService（用于 JSON 编码）
 local HttpService = game:GetService("HttpService")
-
--- 注意：Luau 中 getfenv/setfenv 已被弃用/限制
--- 我们依赖全局 print/warn 的重写已经在 _G 中设置
--- 测试模块会自动使用全局的 print/warn
 
 -- 从脚本注入获取 roots 路径（多个路径用 ';' 分隔）
 local rootsPath = "{{ROOTS}}"
@@ -156,20 +120,11 @@ for _, pathStr in ipairs(rootPaths) do
 end
 
 -- 引入 testez - 从 TestService 加载
-local TestService = game:GetService("TestService")
 local TestEZ
 local testezLoadSuccess, testezLoadError = pcall(function()
-	-- 从 TestService/test-cloud-testez/testez 加载
-	local testCloudTestez = TestService:FindFirstChild("test-cloud-testez")
-	if testCloudTestez then
-		local testezModule = testCloudTestez:FindFirstChild("testez")
-		if testezModule then
-			TestEZ = require(testezModule)
-			return
-		end
-	end
 
-	error("TestEZ not found in TestService.test-cloud-testez.testez")
+	TestEZ = require(game.ReplicatedStorage.rbxts_include.node_modules["@rbxts"]["test-cloud-testez"])
+
 end)
 
 if not testezLoadSuccess then
@@ -485,6 +440,17 @@ for _, error in ipairs(errors) do
 	if error.message and error.message:find("Error during planning") then
 		planningErrorCount = planningErrorCount + 1
 	end
+end
+
+-- 等待一些帧，让 LogService 有时间触发所有待处理的事件
+-- LogService.MessageOut 可能在下一帧才触发
+for i = 1, 10 do
+	task.wait()
+end
+
+-- 断开 LogService 连接
+if connection then
+	connection:Disconnect()
 end
 
 -- 返回测试结果

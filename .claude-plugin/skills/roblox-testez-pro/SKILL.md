@@ -286,24 +286,24 @@ npm test -- -t 180
 - **YAML 格式** - 易于阅读和 Git diff
 - **自动清理** - 保留最近 2 次结果
 - **堆栈跟踪过滤** - 自动过滤 TestEZ 内部代码
-- **捕获输出** - 包含所有 `_G.print()` 输出
+- **捕获输出** - 包含所有 `print()` 和 `warn()` 输出
 
 ## 📝 云测试特性
 
 ### 打印输出
 
-❌ **普通 print()** - 在云测试环境下无法输出到日志
-✅ **_G.print()** - 可以输出到日志，用于调试
+✅ **普通 print() 和 warn()** - 使用 LogService.MessageOut 事件自动捕获
 
-**注意**: 调试完成后立即移除 `_G.print()`，否则可能导致错误。
+**注意**: 调试完成后立即移除 `print()` 语句，避免影响性能。
 
 ```lua
 return function()
-    _G.print("🧪 Starting tests...")  -- ✅ 会被捕获
+    print("🧪 Starting tests...")  -- ✅ 会被捕获
 
     describe("MyModule", function()
         it("should work", function()
-            _G.print("Testing something")  -- ✅ 会被捕获
+            print("Testing something")  -- ✅ 会被捕获
+            warn("This is a warning")   -- ✅ warn 也会被捕获
             expect(true).to.equal(true)
         end)
     end)
@@ -329,7 +329,7 @@ ServerScriptService.Server.MyModule:42
 **A**: TestEZ 源码内置在 `TestService/test-cloud-testez/testez/`，无需安装。不需要 Wally 或 @rbxts/testez。
 
 ### Q: 如何在测试中打印调试信息？
-**A**: 使用 `_G.print()` 而不是普通的 `print()`。调试完成后立即移除。
+**A**: 直接使用 `print()` 和 `warn()` 即可，输出会被自动捕获（使用 LogService.MessageOut）。调试完成后立即移除。
 
 ### Q: require() 错误信息不够详细？
 **A**: 已修复！现在会显示具体的错误位置，如 `→ Failed at: ServerScriptService.Server.MyModule:42`

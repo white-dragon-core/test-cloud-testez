@@ -2,11 +2,11 @@
 return function()
 	local StringUtils = require(script.Parent.StringUtils)
 
-	_G.print("📝 Starting StringUtils tests...")
+	print("📝 Starting StringUtils tests...")
 
 	describe("StringUtils.reverse", function()
 		it("should reverse a string", function()
-			_G.print("Testing string reverse: hello -> olleh")
+			print("Testing string reverse: hello -> olleh")
 			expect(StringUtils.reverse("hello")).to.equal("olleh")
 		end)
 

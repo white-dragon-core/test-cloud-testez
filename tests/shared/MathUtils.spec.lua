@@ -2,11 +2,11 @@
 return function()
 	local MathUtils = require(script.Parent.MathUtils)
 
-	_G.print("🧪 Starting MathUtils tests...")
+	print("🧪 Starting MathUtils tests...")
 
 	describe("MathUtils.add", function()
 		it("should add two positive numbers", function()
-			_G.print("Testing addition: 2 + 3")
+			print("Testing addition: 2 + 3")
 			expect(MathUtils.add(2, 3)).to.equal(5)
 		end)
 
@@ -49,7 +49,7 @@ return function()
 		end)
 
 		it("should throw error on division by zero", function()
-			_G.warn("⚠️ Testing division by zero - should throw error")
+			warn("⚠️ Testing division by zero - should throw error")
 			expect(function()
 				MathUtils.divide(10, 0)
 			end).to.throw()

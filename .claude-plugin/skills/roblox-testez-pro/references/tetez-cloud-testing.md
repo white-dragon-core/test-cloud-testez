@@ -315,15 +315,16 @@ end
 
 ### 捕获 Print 输出
 
-要从测试中捕获 print/warn 输出，使用 `_G.print()` 和 `_G.warn()`：
+可以直接使用普通的 `print()` 和 `warn()` 函数，输出会被自动捕获：
 
 ```lua
 return function()
-    _G.print("开始测试...")  -- 将被捕获
+    print("开始测试...")  -- 将被捕获
 
     describe("MyModule", function()
         it("应该正常工作", function()
-            _G.print("测试某些功能")  -- 将被捕获
+            print("测试某些功能")  -- 将被捕获
+            warn("这是一个警告")   -- warn 也会被捕获
             expect(true).to.equal(true)
         end)
     end)
@@ -331,10 +332,10 @@ end
 ```
 
 捕获的输出会显示在：
-- 测试结果 JSON 文件（`.test-result/*.json` 的 `printMessages` 字段）
+- 测试结果 YAML 文件（`.test-result/*.yaml` 的 `printMessages` 字段）
 - 使用 `-V`（verbose）标志时的控制台输出
 
-**注意**：使用 `_G.print()` 而非 `print()` 以确保在 Cloud 环境中捕获输出。
+**捕获机制**：使用 `LogService.MessageOut` 事件自动捕获所有日志消息。
 
 ### 语法检查
 
@@ -348,10 +349,10 @@ end
 ## Cloud API 限制
 
 1. **只能捕获返回值**: Luau Execution API 只捕获脚本的 return 值
-2. **LogService 不可用**: Cloud 环境中 LogService 事件不会触发
+2. **LogService 事件异步触发**: Cloud 环境中 LogService.MessageOut 事件可以触发，但是**异步的**
 3. **解决方案**:
-   - 重写全局 print/warn 函数（在 require TestEZ 之前）并设置到 `_G.print` / `_G.warn`
-   - 测试文件中使用 `_G.print()` 来输出可被捕获的消息
+   - 使用 LogService.MessageOut 连接捕获所有 print/warn 输出
+   - 在返回结果前等待几帧（`task.wait()`），让 LogService 有时间触发所有待处理的事件
    - 使用 SilentReporter 最小化运行时开销
    - 通过 JSON 返回所有信息（测试统计、错误、堆栈跟踪、捕获输出）
 4. **超时配置**: executeLuau 支持 timeout 参数（1-300 秒范围），默认 300 秒
