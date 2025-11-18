@@ -13,27 +13,10 @@ _G.warn = warn
 
 -- 检测项目类型并加载 TestEZ
 local function loadTestEZ()
-	-- 优先尝试 roblox-ts (TypeScript)
-	local rbxtsInclude = ReplicatedStorage:FindFirstChild("rbxts_include")
-	if rbxtsInclude then
-		local testezPath = rbxtsInclude:FindFirstChild("node_modules")
-		if testezPath then
-			testezPath = testezPath:FindFirstChild("@rbxts")
-			if testezPath then
-				testezPath = testezPath:FindFirstChild("testez")
-				if testezPath then
-					testezPath = testezPath:FindFirstChild("src")
-					if testezPath then
-						print("📦 使用 roblox-ts 项目的 TestEZ")
-						return require(testezPath)
-					end
-				end
-			end
-		end
-	end
 
+	
 	-- 尝试 Wally (Lua)
-	local packages = ReplicatedStorage:FindFirstChild("Packages")
+	local packages = ReplicatedStorage:FindFirstChild("Packages") or ReplicatedStorage:FindFirstChild("packages")
 	if packages then
 		local testez = packages:FindFirstChild("TestEZ") or packages:FindFirstChild("testez")
 		if testez then
@@ -55,6 +38,26 @@ local function loadTestEZ()
 			end
 		end
 	end
+
+	-- 先尝试 roblox-ts (TypeScript)
+	local rbxtsInclude = ReplicatedStorage:FindFirstChild("rbxts_include")
+	if rbxtsInclude then
+		local testezPath = rbxtsInclude:FindFirstChild("node_modules")
+		if testezPath then
+			testezPath = testezPath:FindFirstChild("@rbxts")
+			if testezPath then
+				testezPath = testezPath:FindFirstChild("testez")
+				if testezPath then
+					testezPath = testezPath:FindFirstChild("src")
+					if testezPath then
+						print("📦 使用 roblox-ts 项目的 TestEZ")
+						return require(testezPath)
+					end
+				end
+			end
+		end
+	end
+
 
 	error("❌ 无法找到 TestEZ！请确保已通过 Wally 或 npm 安装 TestEZ")
 end

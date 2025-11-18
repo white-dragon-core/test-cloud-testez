@@ -55,19 +55,26 @@ This is a testing tool for running TestEZ tests in Roblox Cloud environment. It 
 
 在`rokit.toml`中定义的工具：
 - `rojo` (7.4.4): Roblox项目构建工具
-- `wally` (0.3.2): Roblox包管理器
 
-注意：不再需要`rbxcloud`工具，已使用自己的API实现替代。
+**注意**：
+- ❌ 不再需要 `wally` - 不使用外部包管理器
+- ❌ 不再需要 `rbxcloud` - 已使用自己的 API 实现替代
 
-### Dependency Management
+### TestEZ 管理
 
-使用Wally管理Roblox依赖：
-```bash
-wally install
+**内置 TestEZ**: TestEZ 源码内置在项目中，位于：
+```
+TestService/test-cloud-testez/testez/
 ```
 
-主要依赖：
-- `testez` (roblox/testez@0.4.1): 测试框架
+**优势**：
+- ✅ 无需 `wally install`
+- ✅ 无需 `@rbxts/testez` npm 包
+- ✅ 完全控制 TestEZ 源码
+- ✅ 包含自定义改进（require() 错误处理）
+- ✅ 版本固定，不会意外更新破坏
+
+详见: [TESTEZ_MIGRATION.md](./TESTEZ_MIGRATION.md)
 
 ### Build System
 
@@ -77,8 +84,9 @@ rojo build default.project.json -o test-place.rbxl
 ```
 
 项目结构（`default.project.json`）：
-- `ReplicatedStorage/Packages`: Wally依赖
+- `TestService`: 包含测试相关文件，包括 TestEZ 源码
 - `ReplicatedStorage/Lib`: Lua源代码（用于测试）
+- `ServerScriptService/Server`: 服务器端代码和测试
 
 ## Test Execution
 
@@ -163,10 +171,10 @@ HTTPS_PROXY=http://proxy.example.com:8080    # HTTPS 代理
 ### Git Ignore
 
 `.gitignore`忽略：
-- `Packages/`: Wally依赖
 - `test-place.rbxl`: 构建产物
 - `.env*`: 环境配置（包含敏感信息）
 - `.test-result/`: 测试结果
+- `out/`: roblox-ts 编译输出（TypeScript 项目）
 
 ## Test Examples
 
@@ -274,13 +282,14 @@ end
 为了提高可读性，堆栈跟踪会自动过滤掉 TestEZ 内部代码：
 
 **过滤规则**:
-- TypeScript项目: 过滤包含 `node_modules.@rbxts.testez.src` 的行
-- Lua项目: 过滤包含 `Packages._Index.roblox_testez` 的行
+- 过滤包含 `TestService.test-cloud-testez.testez` 的行（TestEZ 内部代码）
 - 只保留用户代码相关的堆栈信息
 
 **过滤位置**:
-- `cloud-test.lua`: 在Lua端过滤（收集错误时）
-- `test-in-roblox-cloud.js`: 在JS端再次过滤（保存结果前）
+- `TestService/test-cloud-testez/testez/TestRunner.lua`: TestEZ 内部的错误处理（xpcall error handler）
+- `TestService/test-cloud-testez/testez/TestPlan.lua`: TestPlan 执行时的错误处理
+- `scripts/cloud-test.lua`: 在Lua端收集错误时过滤
+- `scripts/test-in-roblox-cloud.js`: 在JS端保存结果前再次过滤
 
 ### 语法检查
 

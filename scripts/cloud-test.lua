@@ -155,54 +155,21 @@ for _, pathStr in ipairs(rootPaths) do
 	table.insert(targetDirs, targetDir)
 end
 
--- 引入 testez - 尝试从两个可能的位置加载
+-- 引入 testez - 从 TestService 加载
+local TestService = game:GetService("TestService")
 local TestEZ
 local testezLoadSuccess, testezLoadError = pcall(function()
-	-- 尝试 1: Wally Packages (Lua 项目)
-	if ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("testez") then
-		TestEZ = require(ReplicatedStorage.Packages.testez)
-		return
-	end
-
-	if ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("TestEZ") then
-		TestEZ = require(ReplicatedStorage.Packages.TestEZ)
-		return
-	end
-
-	-- 尝试 2: node_modules (TypeScript 项目)
-	if ReplicatedStorage:FindFirstChild("rbxts_include") then
-		local nodeModules = ReplicatedStorage.rbxts_include:FindFirstChild("node_modules")
-		if nodeModules then
-			-- 尝试 @rbxts/testez/src (roblox-ts 标准路径)
-			local rbxts = nodeModules:FindFirstChild("@rbxts")
-			if rbxts and rbxts:FindFirstChild("testez") then
-				local testezModule = rbxts.testez
-				-- 检查是否有 src 子目录
-				if testezModule:FindFirstChild("src") then
-					TestEZ = require(testezModule.src)
-					return
-				else
-					-- 没有 src，直接 require
-					TestEZ = require(testezModule)
-					return
-				end
-			end
-
-			-- 尝试直接的 testez/src
-			if nodeModules:FindFirstChild("testez") then
-				local testezModule = nodeModules.testez
-				if testezModule:FindFirstChild("src") then
-					TestEZ = require(testezModule.src)
-					return
-				else
-					TestEZ = require(testezModule)
-					return
-				end
-			end
+	-- 从 TestService/test-cloud-testez/testez 加载
+	local testCloudTestez = TestService:FindFirstChild("test-cloud-testez")
+	if testCloudTestez then
+		local testezModule = testCloudTestez:FindFirstChild("testez")
+		if testezModule then
+			TestEZ = require(testezModule)
+			return
 		end
 	end
 
-	error("TestEZ not found in Packages or node_modules")
+	error("TestEZ not found in TestService.test-cloud-testez.testez")
 end)
 
 if not testezLoadSuccess then

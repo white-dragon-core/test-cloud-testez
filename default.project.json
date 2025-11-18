@@ -4,9 +4,6 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Packages": {
-        "$path": "Packages"
-      },
       "Lib": {
         "$path": "src/shared"
       }
@@ -19,9 +16,7 @@
     },
     "TestService": {
       "$className": "TestService",
-      "test-cloud-testez": {
-        "$path": "TestService/test-cloud-testez"
-      }
+      "$path": "TestService"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "test-cloud-testez",
-  "version": "0.3.4",
+  "name": "@rbxts/test-cloud-testez",
+  "version": "0.3.6",
   "description": "Lightweight testing tool for running TestEZ tests in Roblox Cloud and Studio environments with direct API calls, supporting both TypeScript and Lua projects",
   "main": "scripts/test-in-roblox-cloud.js",
   "bin": {
@@ -37,6 +37,7 @@
     "TestService/",
     "README.md",
     "CLAUDE.md",
+    "index.d.ts",
     ".env.example"
   ],
   "author": "White Dragon Core",
@@ -60,5 +61,8 @@
     "dotenv": "^17.2.3",
     "https-proxy-agent": "^7.0.6",
     "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
