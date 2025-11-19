@@ -6,7 +6,6 @@ return function()
 
 	describe("MathUtils.add", function()
 		it("should add two positive numbers", function()
-			print("Testing addition: 2 + 3")
 			expect(MathUtils.add(2, 3)).to.equal(5)
 		end)
 

@@ -40,6 +40,7 @@ function parseArgs() {
     glob: null,
     skipBuild: false,
     timeout: 120000,  // Default 2 minutes (120 seconds)
+    project: 'default.project.json',  // Default project file
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -57,6 +58,8 @@ function parseArgs() {
       config.timeout = parseInt(args[++i], 10) * 1000;  // Convert seconds to milliseconds
     } else if (arg === '-r' || arg === '--rbxl') {
       config.rbxl = args[++i];
+    } else if (arg === '-p' || arg === '--project') {
+      config.project = args[++i];
     } else if (arg === '-j' || arg === '--jest') {
       config.jest = true;
     } else if (arg === '--roots') {
@@ -106,6 +109,7 @@ Options:
   -v, --version       Show version information
   -t, --timeout <sec> Task execution timeout in seconds (default: 120)
   -r, --rbxl <path>   Specify rbxl file path to upload (default: test-place.rbxl)
+  -p, --project <file> Specify Rojo project file (default: default.project.json)
   -j, --jest          Use jest instead of testez (default: testez)
       --roots <path>  Test root paths, space-separated (default: ServerScriptService ReplicatedStorage)
                       Also supports comma-separated for backward compatibility
@@ -118,6 +122,7 @@ Examples:
   rbxcloud-test loop                               # Run only tests containing "loop"
   rbxcloud-test --verbose                          # Verbose output mode
   rbxcloud-test --skip-build                       # Skip build, upload and test directly
+  rbxcloud-test --project build.project.json       # Use custom project file for tests
   rbxcloud-test "should allow" -V                  # Run specific test with verbose logging
   rbxcloud-test --roots ServerScriptService        # Test only ServerScriptService
   rbxcloud-test --roots ServerScriptService Shared # Test multiple roots (space-separated)
@@ -235,7 +240,7 @@ async function buildPlace(config) {
 
   log.step('Step 1/4: Building Place file with Rojo');
 
-  const projectFile = 'default.project.json';
+  const projectFile = config.project;
 
   if (!fs.existsSync(projectFile)) {
     throw new Error(`Rojo project file not found: ${projectFile}`);

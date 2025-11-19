@@ -1,7 +1,7 @@
 /// <reference types="@rbxts/types" />
 
-import Expectation from "./src/test-cloud-testez/Expectation";
-import Context from "./src/test-cloud-testez/Context";
+import Expectation from "./src/Expectation";
+import Context from "./src/Context";
 export {};
 
 

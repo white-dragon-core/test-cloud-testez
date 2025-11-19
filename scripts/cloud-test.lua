@@ -95,27 +95,6 @@ for _, pathStr in ipairs(rootPaths) do
 		error("Failed to navigate to test directory '" .. pathStr .. "': " .. tostring(navError))
 	end
 
-	-- 如果目标目录是 ReplicatedStorage，则尝试自动检测项目类型
-	-- 这样保持向后兼容性
-	if targetDir == game:GetService("ReplicatedStorage") then
-		-- Check if we have rbxts_include or use Lib for Lua projects
-		if targetDir:FindFirstChild("rbxts_include") then
-			-- TypeScript/roblox-ts project
-			-- 优先使用 @white-dragon-bevy 包（如果存在）
-			local nodeModules = targetDir.rbxts_include:FindFirstChild("node_modules")
-			if nodeModules and nodeModules:FindFirstChild("@white-dragon-bevy") then
-				targetDir = nodeModules["@white-dragon-bevy"]
-			else
-				-- 如果没有找到特定包，使用 rbxts_include（但会扫描所有文件，可能较慢）
-				targetDir = targetDir.rbxts_include
-			end
-		elseif targetDir:FindFirstChild("Lib") then
-			-- Lua project
-			targetDir = targetDir.Lib
-		end
-		-- 如果都没有找到，就使用 ReplicatedStorage 本身作为测试目录
-	end
-
 	table.insert(targetDirs, targetDir)
 end
 
@@ -234,27 +213,83 @@ end
 
 -- 预检查：尝试加载每个测试文件，捕获语法错误
 for _, testFile in ipairs(allTestFiles) do
-	local loadSuccess, loadError = xpcall(function()
+	-- 使用自定义错误处理器来捕获原始错误和堆栈
+	local errorInfo
+
+	local loadSuccess = xpcall(function()
 		require(testFile)
-	end, debug.traceback)
+	end, function(err)
+		-- 获取完整的堆栈跟踪
+		local fullTrace = debug.traceback(tostring(err), 2)
+		-- 保存所有信息
+		errorInfo = {
+			err = tostring(err),
+			trace = fullTrace
+		}
+		return fullTrace
+	end)
 
 	if not loadSuccess then
-		local errorMsg = tostring(loadError)
-
-		-- 从错误消息中提取详细信息
-		local errorLines = {}
-		for line in errorMsg:gmatch("[^\r\n]+") do
-			table.insert(errorLines, line)
+		-- 等待一些帧，让 LogService 有时间触发所有待处理的事件
+		-- 真正的错误信息会被记录到 LogService.MessageOut 中
+		for i = 1, 10 do
+			task.wait()
 		end
 
-		-- 提取第一个包含行号的堆栈行
+		-- 从 capturedPrintMessages 中查找最近的 MessageError
+		-- 这通常包含真正的原始错误信息
+		local actualError = errorInfo.err
 		local errorLocation = ""
-		for _, line in ipairs(errorLines) do
-			-- 查找包含文件路径和行号的行（格式: "  Path:LineNumber"）
-			if line:find(testFile.Name) and line:find(":%d+") then
-				errorLocation = line:match("^%s*(.+)$") or line -- 去掉前导空格
-				break
+
+		-- 倒序遍历，找到最近的错误消息
+		for i = #capturedPrintMessages, 1, -1 do
+			local msg = capturedPrintMessages[i]
+			if msg.type == "MessageError" then
+				-- 尝试解析错误消息格式: "Path:Line: error message"
+				local fullMsg = msg.message
+				local path, lineNum, errMsg = fullMsg:match("^([^:]+):(%d+):%s*(.+)$")
+
+				if path and lineNum and errMsg and not path:find("TaskScript") then
+					-- 找到了真正的错误
+					actualError = errMsg
+					errorLocation = path .. ":" .. lineNum
+					break
+				end
 			end
+		end
+
+		-- 构建友好的错误消息
+		local friendlyMessage = "Module loading error\n" ..
+		                        "Test file: " .. testFile:GetFullName()
+
+		if errorLocation ~= "" then
+			friendlyMessage = friendlyMessage .. "\n" ..
+			                  "Location: " .. errorLocation .. "\n" ..
+			                  "Error: " .. actualError
+		else
+			friendlyMessage = friendlyMessage .. "\n" ..
+			                  "Error: " .. actualError
+		end
+
+		-- 从 debug.traceback 构建堆栈跟踪
+		local allLines = {}
+		for line in errorInfo.trace:gmatch("[^\r\n]+") do
+			table.insert(allLines, line)
+		end
+
+		local stackTrace = ""
+		if #allLines > 1 then
+			for i = 2, #allLines do
+				if stackTrace ~= "" then
+					stackTrace = stackTrace .. "\n"
+				end
+				stackTrace = stackTrace .. allLines[i]
+			end
+		end
+
+		-- 断开 LogService 连接
+		if connection then
+			connection:Disconnect()
 		end
 
 		local output = {
@@ -265,11 +300,8 @@ for _, testFile in ipairs(allTestFiles) do
 			skipped = 0,
 			errors = {{
 				testName = "Syntax Check: " .. testFile:GetFullName(),
-				message = "Syntax error in test file\n" ..
-				          "File: " .. testFile:GetFullName() .. "\n" ..
-				          (errorLocation ~= "" and ("Location: " .. errorLocation .. "\n") or "") ..
-				          "Hint: Check for incomplete statements, missing quotes, or unclosed blocks",
-				trace = errorMsg
+				message = friendlyMessage,
+				trace = stackTrace ~= "" and stackTrace or errorInfo.trace
 			}},
 			printMessages = capturedPrintMessages
 		}
@@ -287,58 +319,35 @@ end, debug.traceback)
 if not runSuccess then
 	local errorMessage = tostring(results)
 
-	-- 先从完整错误信息中提取文件位置（在过滤之前）
-	local errorFile = "Unknown"
-	local errorLine = ""
-
-	-- 查找第一个包含我们代码的堆栈行（不是 TestEZ 内部的）
-	for line in errorMessage:gmatch("[^\r\n]+") do
-		-- 跳过错误消息本身
-		if line:find("ReplicatedStorage") or line:find("ServerScriptService") or line:find("TaskScript") then
-			-- 不是 TestEZ 包内部的代码
-			if not (line:find("node_modules%.@rbxts%.testez%.src") or line:find("Packages%._Index%.roblox_testez")) then
-				errorFile = line
-				break
-			end
-		end
-	end
-
 	-- 尝试从错误信息中分离消息和堆栈跟踪
-	local message = ""
-	local trace = ""
 	local lines = {}
 	for line in errorMessage:gmatch("[^\r\n]+") do
 		table.insert(lines, line)
 	end
 
-	if #lines > 0 then
-		message = lines[1]
-		if #lines > 1 then
-			-- 提取堆栈跟踪，过滤 TestEZ 内部代码
-			for i = 2, #lines do
-				local line = lines[i]
-				local shouldFilter = line:find("node_modules%.@rbxts%.testez%.src") or
-				                     line:find("Packages%._Index%.roblox_testez")
-				if not shouldFilter then
-					if trace ~= "" then
-						trace = trace .. "\n"
-					end
-					trace = trace .. line
+	-- 提取第一行作为主要错误消息
+	local primaryError = lines[1] or errorMessage
+	local message = primaryError
+
+	-- 提取堆栈跟踪，过滤 TestEZ 内部代码
+	local trace = ""
+	if #lines > 1 then
+		for i = 2, #lines do
+			local line = lines[i]
+			local shouldFilter = line:find("node_modules%.@rbxts%.testez%.src") or
+			                     line:find("Packages%._Index%.roblox_testez")
+			if not shouldFilter then
+				if trace ~= "" then
+					trace = trace .. "\n"
 				end
+				trace = trace .. line
 			end
 		end
-	else
-		message = errorMessage
 	end
 
-	-- 构建更详细的错误消息
-	local detailedMessage = message
-	if message:find("Requested module experienced an error while loading") or
-	   message:find("error while loading") then
-		detailedMessage = "Syntax error in test file\n" ..
-		                  "Location: " .. errorFile .. "\n" ..
-		                  "Hint: Check for incomplete statements, missing quotes, or unclosed blocks"
-	end
+	-- 构建友好的错误消息，保留原始错误信息
+	local friendlyMessage = "Test execution failed\n" ..
+	                        "Error: " .. primaryError
 
 	local output = {
 		success = false,
@@ -348,8 +357,8 @@ if not runSuccess then
 		skipped = 0,
 		errors = {{
 			testName = "Test Execution (Fatal Error)",
-			message = detailedMessage,
-			trace = trace ~= "" and trace or ("Full error:\n" .. errorMessage)
+			message = friendlyMessage,
+			trace = trace ~= "" and trace or errorMessage
 		}},
 		printMessages = capturedPrintMessages
 	}
