@@ -371,10 +371,14 @@ function filterStackTrace(trace) {
     .split('\n')
     .filter(line => {
       // 过滤掉 TestEZ 包内部的所有代码
-      // TypeScript: node_modules.@rbxts.testez.src
-      // Lua: Packages._Index.roblox_testez
-      return !line.includes('node_modules.@rbxts.testez.src') &&
-             !line.includes('Packages._Index.roblox_testez');
+      // TypeScript: node_modules.@rbxts.test-cloud-testez (当前项目)
+      // TypeScript: node_modules.@rbxts.testez (通用包)
+      // Lua: Packages._Index.roblox_testez (Wally包)
+      // TaskScript: Cloud execution script
+      return !line.includes('node_modules.@rbxts.test-cloud-testez') &&
+             !line.includes('node_modules.@rbxts.testez') &&
+             !line.includes('Packages._Index.roblox_testez') &&
+             !line.includes('TaskScript:');
     })
     .join('\n');
 }

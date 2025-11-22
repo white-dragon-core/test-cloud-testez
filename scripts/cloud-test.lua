@@ -334,8 +334,14 @@ if not runSuccess then
 	if #lines > 1 then
 		for i = 2, #lines do
 			local line = lines[i]
-			local shouldFilter = line:find("node_modules%.@rbxts%.testez%.src") or
-			                     line:find("Packages%._Index%.roblox_testez")
+			-- 过滤掉 TestEZ 包内部的所有代码
+			-- TypeScript: node_modules.@rbxts.test-cloud-testez (当前项目)
+			-- TypeScript: node_modules.@rbxts.testez.src (通用包)
+			-- Lua: Packages._Index.roblox_testez (Wally包)
+			local shouldFilter = line:find("node_modules%.@rbxts%.test%-cloud%-testez") or
+			                     line:find("node_modules%.@rbxts%.testez") or
+			                     line:find("Packages%._Index%.roblox_testez") or
+			                     line:find("TaskScript:")  -- 也过滤掉 TaskScript 行
 			if not shouldFilter then
 				if trace ~= "" then
 					trace = trace .. "\n"
@@ -399,10 +405,13 @@ local function collectErrors(node, parentPath)
 					for i = 2, #lines do
 						local line = lines[i]
 						-- 过滤掉 TestEZ 包内部的行
-						-- TypeScript: node_modules.@rbxts.testez.src
-						-- Lua: Packages._Index.roblox_testez
-						local shouldFilter = line:find("node_modules%.@rbxts%.testez%.src") or
-						                     line:find("Packages%._Index%.roblox_testez")
+						-- TypeScript: node_modules.@rbxts.test-cloud-testez (当前项目)
+						-- TypeScript: node_modules.@rbxts.testez (通用包)
+						-- Lua: Packages._Index.roblox_testez (Wally包)
+						local shouldFilter = line:find("node_modules%.@rbxts%.test%-cloud%-testez") or
+						                     line:find("node_modules%.@rbxts%.testez") or
+						                     line:find("Packages%._Index%.roblox_testez") or
+						                     line:find("TaskScript:")  -- 也过滤掉 TaskScript 行
 
 						if not shouldFilter then
 							if trace ~= "" then
