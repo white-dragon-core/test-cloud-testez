@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/test-cloud-testez",
-  "version": "0.5.8",
+  "version": "0.5.10",
   "description": "Lightweight testing tool for running TestEZ tests in Roblox Cloud and Studio environments with direct API calls, supporting both TypeScript and Lua projects",
   "main": "scripts/test-in-roblox-cloud.js",
   "bin": {

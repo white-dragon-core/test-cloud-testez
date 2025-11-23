@@ -240,20 +240,74 @@ for _, testFile in ipairs(allTestFiles) do
 		-- 这通常包含真正的原始错误信息
 		local actualError = errorInfo.err
 		local errorLocation = ""
+		local stackTrace = ""
 
-		-- 倒序遍历，找到最近的错误消息
+		-- 倒序遍历，找到第一个非 "Requested module" 错误（根本原因）
 		for i = #capturedPrintMessages, 1, -1 do
 			local msg = capturedPrintMessages[i]
 			if msg.type == "MessageError" then
-				-- 尝试解析错误消息格式: "Path:Line: error message"
 				local fullMsg = msg.message
-				local path, lineNum, errMsg = fullMsg:match("^([^:]+):(%d+):%s*(.+)$")
 
-				if path and lineNum and errMsg and not path:find("TaskScript") then
-					-- 找到了真正的错误
-					actualError = errMsg
-					errorLocation = path .. ":" .. lineNum
-					break
+				-- 跳过 "Requested module" 错误，找到根本原因
+				if not fullMsg:find("Requested module") then
+					-- 尝试解析两种格式:
+					-- 格式1: "Path:Line: error message"
+					local path, lineNum, errMsg = fullMsg:match("^([^:]+):(%d+):%s*(.+)$")
+
+					if path and lineNum and errMsg and not path:find("TaskScript") then
+						-- 找到了真正的错误
+						actualError = errMsg
+						errorLocation = path .. ":" .. lineNum
+						break
+					else
+						-- 格式2: Roblox 堆栈格式
+						-- "error message\n    Stack Begin\n    Script 'Path', Line X\n    Stack End"
+						local lines = {}
+						for line in fullMsg:gmatch("[^\r\n]+") do
+							table.insert(lines, line)
+						end
+
+						if #lines > 0 then
+							-- 第一行是错误消息
+							actualError = lines[1]
+
+							-- 查找 "Script 'Path', Line X" 格式的行
+							for j = 2, #lines do
+								local scriptPath, scriptLine = lines[j]:match("Script%s+'([^']+)',%s*Line%s+(%d+)")
+								if scriptPath and scriptLine then
+									errorLocation = scriptPath .. ":" .. scriptLine
+									-- 将完整的堆栈信息保存到 stackTrace
+									if stackTrace == "" then
+										for k = 2, #lines do
+											if stackTrace ~= "" then
+												stackTrace = stackTrace .. "\n"
+											end
+											stackTrace = stackTrace .. lines[k]
+										end
+									end
+									break
+								end
+							end
+							break
+						end
+					end
+				end
+			end
+		end
+
+		-- 如果没有从 printMessages 中找到错误，使用 debug.traceback
+		if stackTrace == "" and errorInfo.trace then
+			local allLines = {}
+			for line in errorInfo.trace:gmatch("[^\r\n]+") do
+				table.insert(allLines, line)
+			end
+
+			if #allLines > 1 then
+				for i = 2, #allLines do
+					if stackTrace ~= "" then
+						stackTrace = stackTrace .. "\n"
+					end
+					stackTrace = stackTrace .. allLines[i]
 				end
 			end
 		end
@@ -269,22 +323,6 @@ for _, testFile in ipairs(allTestFiles) do
 		else
 			friendlyMessage = friendlyMessage .. "\n" ..
 			                  "Error: " .. actualError
-		end
-
-		-- 从 debug.traceback 构建堆栈跟踪
-		local allLines = {}
-		for line in errorInfo.trace:gmatch("[^\r\n]+") do
-			table.insert(allLines, line)
-		end
-
-		local stackTrace = ""
-		if #allLines > 1 then
-			for i = 2, #allLines do
-				if stackTrace ~= "" then
-					stackTrace = stackTrace .. "\n"
-				end
-				stackTrace = stackTrace .. allLines[i]
-			end
 		end
 
 		-- 断开 LogService 连接

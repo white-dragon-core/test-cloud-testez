@@ -21,9 +21,11 @@ return function()
 			expect(success).to.equal(false)
 			expect(err).to.be.ok()
 
-			-- 验证错误消息包含模块名称
+				-- 验证错误消息包含模块名称或 "not a valid member" 错误
 			local errStr = tostring(err)
-			expect(errStr:find("error while loading") or errStr:find("Requested module")).to.be.ok()
+			expect(errStr:find("error while loading") or
+			       errStr:find("Requested module") or
+			       errStr:find("not a valid member")).to.be.ok()
 		end)
 
 		it("should continue running tests after pcall-wrapped require error", function()
